@@ -1,0 +1,26 @@
+// example IDL file
+
+namespace EDA1;
+
+//union Any { Wildcard, Weapon, Pickup }
+
+table Content {
+  name:string;
+  buffer:[ubyte];
+}
+
+table Wildcard {
+  paths:[string];
+}
+
+table Expand {
+  files:[string];
+}
+
+table Data {
+  contents:[Content];
+}
+
+table Exit {
+}
+
