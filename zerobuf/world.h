@@ -3,15 +3,15 @@
  * All rights reserved. Do not distribute without further notice.
  */
 
-#ifndef HELLO_WORLD_H
-#define HELLO_WORLD_H
+#ifndef ZEROBUF_WORLD_H
+#define ZEROBUF_WORLD_H
 
 /**
  * The namespace to rule the world.
  *
- * The hello namespace implements the world to provide a template project.
+ * The zerobuf namespace implements the world to provide a template project.
  */
-namespace hello
+namespace zerobuf
 {
 /**
  * The world class.
@@ -28,6 +28,6 @@ public:
     static int getN( const int n );
 };
 
-} /// namespace hello
+} /// namespace zerobuf
 
-#endif // HELLO_WORLD_H
+#endif // ZEROBUF_WORLD_H

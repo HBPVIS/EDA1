@@ -4,16 +4,16 @@
  * All rights reserved. Do not distribute without further notice.
  */
 
-#include <hello/world.h>
-#include <hello/version.h>
+#include <zerobuf/world.h>
+#include <eda1/version.h>
 
 #include <iostream>
 
-namespace hello
+namespace zerobuf
 {
 void World::greet()
 {
-    std::cout << "Hello world version " << Version::getRevString()
+    std::cout << "Zerobuf world version " << eda1::Version::getRevString()
               << std::endl;
 }
 
