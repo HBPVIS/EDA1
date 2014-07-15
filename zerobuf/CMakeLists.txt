@@ -4,7 +4,7 @@
 
 source_group(\\ FILES CMakeLists.txt)
 
-FLATC_TARGET(SCHEMER schema.fbs)
+FLATC_TARGET(SCHEMER data.fbs exit.fbs expand.fbs wildcard.fbs)
 
 set(ZEROBUF_PUBLIC_HEADERS ${COMMON_INCLUDES} world.h)
 set(ZEROBUF_HEADERS ${SCHEMER_OUTPUTS})

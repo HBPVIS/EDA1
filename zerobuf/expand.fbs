@@ -1,0 +1,12 @@
+
+namespace zerobuf;
+
+table Path {
+  name:string;
+}
+
+table Expand {
+  files:[Path];
+}
+
+root_type Expand;
