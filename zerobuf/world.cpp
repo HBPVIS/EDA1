@@ -6,7 +6,7 @@
 
 #include <zerobuf/world.h>
 #include <zerobuf/schema_generated.h>
-#include <eda1/version.h>
+#include <zerobuf/version.h>
 
 #include <iostream>
 
@@ -14,7 +14,7 @@ namespace zerobuf
 {
 void World::greet()
 {
-    std::cout << "Zerobuf world version " << eda1::Version::getRevString()
+    std::cout << "Zerobuf world version " << zerobuf::Version::getRevString()
               << std::endl;
 }
 
