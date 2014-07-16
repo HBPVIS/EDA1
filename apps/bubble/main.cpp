@@ -57,33 +57,38 @@ class Bubble
 {
 private:
     void* _subscriber;
+    void* _exitSubscriber;
     void* _publisher;
     void* _context;
 public:
     Bubble()
         : _subscriber( 0 )
+        , _exitSubscriber( 0 )
         , _publisher( 0 )
         , _context( zmq_ctx_new( ))
     {
         const std::string& previousRole = boost::lexical_cast< std::string >( role-1 );
         const std::string& roleString = boost::lexical_cast< std::string >( role );
-        if( role == WILDCARDER )
-        {
-
-        }
-        else
+        const std::string& exitString = boost::lexical_cast< std::string >( HASHER );
+        if( role != WILDCARDER )
         {
             _subscriber = zmq_socket( _context, ZMQ_SUB );
             zmq_connect( _subscriber, std::string( "tcp://localhost:" + previousRole ).c_str( ));
             zmq_setsockopt( _subscriber, ZMQ_SUBSCRIBE, "", 0 );
-
-            _publisher = zmq_socket( _context, ZMQ_PUB );
-            zmq_bind( _publisher, std::string( "tcp://localhost:" + roleString ).c_str( ));
         }
+
+        _publisher = zmq_socket( _context, ZMQ_PUB );
+        zmq_bind( _publisher, std::string( "tcp://*:" + roleString ).c_str( ));
+
+        _exitSubscriber = zmq_socket( _context, ZMQ_SUB );
+        zmq_connect( _exitSubscriber, std::string( "tcp://localhost:" + exitString ).c_str( ));
+        zmq_setsockopt( _exitSubscriber, ZMQ_SUBSCRIBE, "", 0 );
     }
 
     ~Bubble()
     {
+        zmq_close( _exitSubscriber );
+        zmq_close( _publisher );
         zmq_close( _subscriber );
         zmq_ctx_destroy( _context );
     }
@@ -96,11 +101,12 @@ public:
         for( ;; )
         {
             uint64_t msgSize;
-            zmq_pollitem_t items [] = {
-                { _subscriber, 0, ZMQ_POLLIN, 0 }
-            };
-            zmq_poll( items, 1, -1 );
+            zmq_pollitem_t items[2] = {{ _exitSubscriber, 0, ZMQ_POLLIN, 0 },
+                                       { _subscriber, 0, ZMQ_POLLIN, 0 }};
 
+            zmq_poll( items, role == WILDCARDER ? 1 : 2, role == WILDCARDER ? 10 : -1 );
+
+            // exit, Junge!
             if( items[0].revents & ZMQ_POLLIN )
             {
                 if( zmq_recv( _subscriber, &msgSize, sizeof( msgSize ), 0) == -1 )
@@ -110,7 +116,38 @@ public:
                 if( zmq_recv( _subscriber, buf, msgSize, 0 ) == -1 )
                     continue;
 
-                process( buf );
+                break;
+            }
+
+            if( role != WILDCARDER )
+            {
+                if( items[1].revents & ZMQ_POLLIN )
+                {
+                    if( zmq_recv( _subscriber, &msgSize, sizeof( msgSize ), 0) == -1 )
+                        continue;
+
+                    uint8_t* buf = (uint8_t*)alloca( msgSize );
+                    if( zmq_recv( _subscriber, buf, msgSize, 0 ) == -1 )
+                        continue;
+
+                    process( buf );
+                }
+            }
+            else
+            {
+                flatbuffers::FlatBufferBuilder fbb;
+
+                zerobuf::WildcardBuilder wb(fbb);
+                auto path = zerobuf::CreatePath( fbb, fbb.CreateString( ".*" ));
+                std::vector< decltype( path ) > paths;
+                paths.push_back( path );
+                wb.add_paths( fbb.CreateVector( paths ));
+                auto mloc = wb.Finish();
+                fbb.Finish( mloc );
+
+                const uint64_t wcms = fbb.GetSize();
+                zmq_send( _publisher, &wcms, sizeof(wcms), 0 );
+                zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
             }
         }
     }
@@ -136,6 +173,7 @@ void Bubble< EXPANDER >::process( uint8_t* buffer )
             lunchbox::searchDirectory( ".", i->name()->c_str( ));
         for( auto file : files )
         {
+            std::cout << "EXPAND: " << file << std::endl;
             path = zerobuf::CreateFile( fbb, fbb.CreateString( file.c_str( )));
             paths.push_back( path );
         }
@@ -183,8 +221,17 @@ void Bubble< HASHER >::process( uint8_t* buffer )
     auto data = zerobuf::GetData( buffer );
     for( auto i : *data->contents( ))
     {
-        std::cout << i << std::endl;
+        std::cout << "Name: " << i->name()->c_str() << ", buffer size: "
+                  << i->buffer()->Length() << std::endl;
     }
+
+    flatbuffers::FlatBufferBuilder fbb;
+    auto mloc = zerobuf::CreateExit( fbb );
+    fbb.Finish( mloc );
+
+    auto msgSize = fbb.GetSize();
+    zmq_send( _publisher, &msgSize, sizeof(msgSize), 0 );
+    zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
 }
 
 int main( int argc, char *argv[] )
@@ -218,15 +265,33 @@ int main( int argc, char *argv[] )
     if( role == UNKNOWN )
         return EXIT_FAILURE;
 
-//    switch( role )
-//    {
-//    case WILDCARDER
-//    }
-
-    Bubble< READER > readerBubble;
-    readerBubble.receive();
-    Bubble< WILDCARDER > bubble;
-    bubble.receive();
+    switch( role )
+    {
+    case WILDCARDER:
+    {
+        Bubble< WILDCARDER > bubble;
+        bubble.receive();
+        break;
+    }
+    case EXPANDER:
+    {
+        Bubble< EXPANDER > bubble;
+        bubble.receive();
+        break;
+    }
+    case READER:
+    {
+        Bubble< READER > bubble;
+        bubble.receive();
+        break;
+    }
+    case HASHER:
+    {
+        Bubble< HASHER > bubble;
+        bubble.receive();
+        break;
+    }
+    }
 
     return EXIT_SUCCESS;
 }
