@@ -104,16 +104,16 @@ public:
             zmq_pollitem_t items[2] = {{ _exitSubscriber, 0, ZMQ_POLLIN, 0 },
                                        { _subscriber, 0, ZMQ_POLLIN, 0 }};
 
-            zmq_poll( items, role == WILDCARDER ? 1 : 2, role == WILDCARDER ? 10 : -1 );
+            zmq_poll( items, role == WILDCARDER ? 1 : 2, role == WILDCARDER ? 1000 : -1 );
 
             // exit, Junge!
             if( items[0].revents & ZMQ_POLLIN )
             {
-                if( zmq_recv( _subscriber, &msgSize, sizeof( msgSize ), 0) == -1 )
+                if( zmq_recv( _exitSubscriber, &msgSize, sizeof( msgSize ), 0) == -1 )
                     continue;
 
                 uint8_t* buf = (uint8_t*)alloca( msgSize );
-                if( zmq_recv( _subscriber, buf, msgSize, 0 ) == -1 )
+                if( zmq_recv( _exitSubscriber, buf, msgSize, 0 ) == -1 )
                     continue;
 
                 break;
@@ -209,7 +209,7 @@ void Bubble< READER >::process( uint8_t* buffer )
     auto mloc = zerobuf::CreateData( fbb, fbb.CreateVector( contents ));
     fbb.Finish( mloc );
 
-    auto msgSize = fbb.GetSize();
+    const uint64_t msgSize = fbb.GetSize();
     zmq_send( _publisher, &msgSize, sizeof(msgSize), 0 );
     zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
 }
@@ -228,7 +228,7 @@ void Bubble< HASHER >::process( uint8_t* buffer )
     auto mloc = zerobuf::CreateExit( fbb );
     fbb.Finish( mloc );
 
-    auto msgSize = fbb.GetSize();
+    const uint64_t msgSize = fbb.GetSize();
     zmq_send( _publisher, &msgSize, sizeof(msgSize), 0 );
     zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
 }
