@@ -192,7 +192,6 @@ template<>
 void Bubble< READER >::process( uint8_t* buffer )
 {
     flatbuffers::FlatBufferBuilder fbb;
-    zerobuf::FileBuilder fb(fbb);
     auto content = zerobuf::CreateContent( fbb, fbb.CreateString( "" ));
     std::vector< decltype( content ) > contents;
 
