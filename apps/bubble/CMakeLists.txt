@@ -2,8 +2,8 @@
 #                        Stefan.Eilemann@epfl.ch
 # All rights reserved. Do not distribute without further notice.
 
-set(RULE_HEADERS)
-set(RULE_SOURCES main.cpp)
-set(RULE_LINK_LIBRARIES Hello ${Boost_PROGRAM_OPTIONS_LIBRARY})
+set(BUBBLE_HEADERS)
+set(BUBBLE_SOURCES main.cpp)
+set(BUBBLE_LINK_LIBRARIES Zerobuf ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
-common_application(rule)
+common_application(bubble)

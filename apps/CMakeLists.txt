@@ -2,4 +2,4 @@
 #                        Stefan.Eilemann@epfl.ch
 # All rights reserved. Do not distribute without further notice.
 
-add_subdirectory(rule)
+add_subdirectory(bubble)
