@@ -124,14 +124,25 @@ void Bubble< EXPANDER >::process( uint8_t* buffer )
 {
     flatbuffers::FlatBufferBuilder fbb;
     zerobuf::ExpandBuilder eb(fbb);
+    auto path = zerobuf::CreateFile( fbb, fbb.CreateString( "" ));
+    std::vector< decltype( path ) > paths;
 
     auto wildcard = zerobuf::GetWildcard( buffer );
     for( auto i : *wildcard->paths( ))
     {
-        std::cout << i << std::endl;
+        const lunchbox::Strings& files = lunchbox:: searchDirectory( ".", i );
+        for( auto file : files );
+        {
+            path = zerobuf::CreateFile( fbb, fbb.CreateString( file.c_str( )));
+            paths.push_back( path );
+        }
     }
 
-    auto msgSize = fbb.GetSize();
+    eb.add_paths( fbb.CreateVector( paths ));
+    auto mloc = eb.Finish();
+    fbb.Finish( mloc );
+
+    const uint64_t msgSize = fbb.GetSize();
     zmq_send( _publisher, &msgSize, sizeof(msgSize), 0 );
     zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
 }
