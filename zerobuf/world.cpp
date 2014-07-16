@@ -5,7 +5,6 @@
  */
 
 #include <zerobuf/world.h>
-#include <zerobuf/schema_generated.h>
 #include <zerobuf/version.h>
 
 #include <iostream>
