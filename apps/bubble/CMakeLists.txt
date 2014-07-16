@@ -4,6 +4,7 @@
 
 set(BUBBLE_HEADERS)
 set(BUBBLE_SOURCES main.cpp)
-set(BUBBLE_LINK_LIBRARIES Zerobuf ${Boost_PROGRAM_OPTIONS_LIBRARY})
+set(BUBBLE_LINK_LIBRARIES Zerobuf ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${LUNCHBOX_LIBRARIES})
 
 common_application(bubble)

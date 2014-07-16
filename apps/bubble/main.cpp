@@ -36,6 +36,7 @@
 #include <zerobuf/wildcard_generated.h>
 #include <zerobuf/version.h>
 
+#include <lunchbox/file.h>
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <zmq.h>
@@ -130,15 +131,16 @@ void Bubble< EXPANDER >::process( uint8_t* buffer )
     auto wildcard = zerobuf::GetWildcard( buffer );
     for( auto i : *wildcard->paths( ))
     {
-        const lunchbox::Strings& files = lunchbox:: searchDirectory( ".", i );
-        for( auto file : files );
+        const lunchbox::Strings& files =
+            lunchbox::searchDirectory( ".", i->name()->c_str( ));
+        for( auto file : files )
         {
             path = zerobuf::CreateFile( fbb, fbb.CreateString( file.c_str( )));
             paths.push_back( path );
         }
     }
 
-    eb.add_paths( fbb.CreateVector( paths ));
+    eb.add_files( fbb.CreateVector( paths ));
     auto mloc = eb.Finish();
     fbb.Finish( mloc );
 
