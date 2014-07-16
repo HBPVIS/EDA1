@@ -11,4 +11,10 @@ set(ZEROBUF_HEADERS ${SCHEMER_OUTPUTS})
 set(ZEROBUF_SOURCES ${COMMON_SOURCES} world.cpp)
 set(ZEROBUF_LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
+add_executable(client client.cpp)
+target_link_libraries(client ${libzmq_LIBRARIES})
+
+add_executable(server server.cpp)
+target_link_libraries(server ${libzmq_LIBRARIES})
+
 common_library(Zerobuf)
