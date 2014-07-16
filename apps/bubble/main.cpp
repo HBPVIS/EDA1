@@ -243,7 +243,7 @@ int main( int argc, char *argv[] )
     desc.add_options()
         ( "help,h", "show help message." )
         ( "version,v", "Show program name/version banner and exit." )
-        ( "role", po::value<uint32_t>(&role), "What do I do?" );
+        ( "role,r", po::value<uint32_t>(&role), "What do I do?" );
     po::store( parse_command_line( argc, argv, desc ), vm );
     po::notify( vm );
 
