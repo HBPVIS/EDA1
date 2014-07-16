@@ -37,6 +37,7 @@
 #include <zerobuf/version.h>
 
 #include <lunchbox/file.h>
+#include <lunchbox/memoryMap.h>
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <zmq.h>
@@ -152,11 +153,28 @@ void Bubble< EXPANDER >::process( uint8_t* buffer )
 template<>
 void Bubble< READER >::process( uint8_t* buffer )
 {
+    flatbuffers::FlatBufferBuilder fbb;
+    zerobuf::FileBuilder fb(fbb);
+    auto content = zerobuf::CreateContent( fbb, fbb.CreateString( "" ));
+    std::vector< decltype( content ) > contents;
+
     auto expand = zerobuf::GetExpand( buffer );
     for( auto i : *expand->files( ))
     {
-        std::cout << i << std::endl;
+        auto path = std::string(i->name()->c_str());
+        lunchbox::MemoryMap file( path );
+        content = zerobuf::CreateContent( fbb, fbb.CreateString( path ),
+                                               fbb.CreateVector( (uint8_t*)( file.getAddress() ), file.getSize() ));
+
+        contents.push_back( content );
     }
+
+    auto mloc = zerobuf::CreateData( fbb, fbb.CreateVector( contents ));
+    fbb.Finish( mloc );
+
+    auto msgSize = fbb.GetSize();
+    zmq_send( _publisher, &msgSize, sizeof(msgSize), 0 );
+    zmq_send( _publisher, fbb.GetBufferPointer(), fbb.GetSize(), 0 );
 }
 
 template<>
@@ -205,6 +223,8 @@ int main( int argc, char *argv[] )
 //    case WILDCARDER
 //    }
 
+    Bubble< READER > readerBubble;
+    readerBubble.receive();
     Bubble< WILDCARDER > bubble;
     bubble.receive();
 
